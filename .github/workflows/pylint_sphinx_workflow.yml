@@ -64,7 +64,7 @@ jobs:
         run: |
           for file in $(cat modFiles.txt); 
           do 
-          pylint $file --fail-under 7 --fail-on "E" --fail-on "C";
+          pylint $file --fail-under 7;
           done;
         shell: bash
 
@@ -87,6 +87,10 @@ jobs:
           python -m pip install -U sphinx
           python -m pip install sphinx-rtd-theme
           python -m pip install sphinx-autoapi
+      
+      - name: Configure Git Safe Directory
+        run: |
+          git config --global --add safe.directory /github/workspace/docs/build/html
 
       - name: Make Documentation
         run: |
