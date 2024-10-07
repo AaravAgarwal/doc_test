@@ -9,10 +9,8 @@ BUILDDIR = build
 
 # Target to clean the build directory
 clean:
-    rm -rf $(BUILDDIR)/*
+	rm -rf $(BUILDDIR)/*
 
 # Target to build HTML documentation
 html:
-    $(SPHINXBUILD) -b html $(SOURCEDIR) $(BUILDDIR)/html
-
-# You can add more targets for other formats as needed
+	$(SPHINXBUILD) -b html $(SOURCEDIR) $(BUILDDIR)/html
