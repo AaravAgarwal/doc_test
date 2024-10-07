@@ -1,4 +1,4 @@
-name: Custom Pylint Workflow
+name: Custom Pylint and Sphinx Workflow
 
 on: 
   pull_request:
@@ -11,10 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-          python-version: '3.9'
+        python-version: ['3.9']   # Correct format
     steps:
       - uses: actions/checkout@v3
-      - name: set up python ${{ matrix.python-version }}
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.python-version }}
@@ -22,7 +22,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
         shell: bash
-
 
   FindChangedFiles:
     runs-on: ubuntu-latest
@@ -37,11 +36,9 @@ jobs:
           cat <<EOF | grep ".py$" | tee modFiles.txt
           $(gh pr diff  "$URL" --name-only)
           EOF
-          
           echo "filePath=modFiles.txt" >> $GITHUB_ENV
-          
         shell: bash
-      - name: Upload Artifiact
+      - name: Upload Artifact
         uses: actions/upload-artifact@v3
         with:
              name: changedFiles
@@ -83,7 +80,7 @@ jobs:
       - name: Python
         uses: actions/setup-python@v2.2.1
         with:
-          python-version: 3.9
+          python-version: '3.9'   # Use the correct version format
  
       - name: Installations
         run: |
@@ -114,20 +111,12 @@ jobs:
           force: true
           directory: ./docs/build/html
 
-      - name: Checkout
-        uses: actions/checkout@v4
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v3
-      - name: Build with Jekyll
-        uses: actions/jekyll-build-pages@v1
-        with:
-          source: ./docs/build/html/
-          destination: ./_site
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v2
 
-  # Deployment job
   DeployPages:
     needs: ['BuildDocs']
     environment:
