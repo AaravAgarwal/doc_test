@@ -96,6 +96,10 @@ jobs:
         run: |
           make -C docs clean 
           make -C docs html
+          
+      - name: Configure Git Safe Directory
+        run: |
+          git config --global --add safe.directory /github/workspace/docs/build/html
 
       - name: Commit generated files
         run: |
