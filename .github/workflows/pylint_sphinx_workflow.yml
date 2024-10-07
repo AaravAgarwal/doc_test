@@ -77,6 +77,12 @@ jobs:
       - name: Checkout to VM
         uses: actions/checkout@v2.3.4
 
+      - name: Configure Git Safe Directory
+        run: |
+          git config --global --add safe.directory /github/workspace
+          git config --global --add safe.directory /github/workspace/doc
+          git config --global --add safe.directory /github/workspace/docs/build/h
+
       - name: Python
         uses: actions/setup-python@v2.2.1
         with:
@@ -87,10 +93,6 @@ jobs:
           python -m pip install -U sphinx
           python -m pip install sphinx-rtd-theme
           python -m pip install sphinx-autoapi
-      
-      - name: Configure Git Safe Directory
-        run: |
-          git config --global --add safe.directory /github/workspace/docs/build/html
 
       - name: Make Documentation
         run: |
