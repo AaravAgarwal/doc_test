@@ -84,13 +84,3 @@ class Calculator:
         6
         """
         return a - b
-
-def multiply(a, b):
-    """Multiply two numbers."""
-    return a * b
-
-def divide(a, b):
-    """Divide two numbers. Raises ValueError for division by zero."""
-    if b == 0:
-        raise ValueError("Cannot divide by zero.")
-    return a / b
