@@ -87,6 +87,11 @@ jobs:
         run: |
           make -C docs clean 
           make -C docs html
+
+      - name: Move HTML Files
+        run: |
+          mkdir -p docs_html
+          mv docs/build/html/* docs_html/
           
       - name: Commit documentation changes
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
