@@ -87,6 +87,21 @@ jobs:
         run: |
           make -C docs clean 
           make -C docs html
+          
+      - name: Commit documentation changes
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add -f docs/build/html
+          git commit -m "Update documentation" -a || echo "No changes to commit"
+        
+      - name: Push changes
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
       
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v2
