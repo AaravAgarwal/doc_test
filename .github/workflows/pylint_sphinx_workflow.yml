@@ -89,6 +89,10 @@ jobs:
           make -C docs clean 
           make -C docs html
 
+      - name: List generated files
+        run: |
+          ls -R docs/build
+
       - name: Push HTML files to docs repo
         uses: dmnemec/copy_file_to_another_repo_action@main
         env:
