@@ -89,17 +89,12 @@ jobs:
           make -C docs clean 
           make -C docs html
 
-      - name: Move HTML Files
-        run: |
-          mkdir -p sphinx_html  # Ensure we're using this folder consistently
-          cp -R docs/build/html/* sphinx_html/
-          
-      - name: Push HTML files to doc_test_2
+      - name: Push HTML files to docs repo
         uses: dmnemec/copy_file_to_another_repo_action@main
         env:
           API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}  # Ensure this token has access to doc_test_2
         with:
-          source_file: 'sphinx_html/*'
+          source_file: 'docs/build/html/*'  # Use files directly from the generated path
           destination_repo: 'AaravAgarwal/doc_test_2'  # Replace with your repo
           destination_folder: 'docs_html'  # The folder in doc_test_2 where HTML will be stored
           user_email: 'aarav3@illinois.edu'
