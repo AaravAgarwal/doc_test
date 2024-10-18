@@ -1,4 +1,5 @@
 name: Custom Pylint and Sphinx Workflow
+
 on: 
   pull_request:
     branches:
@@ -40,9 +41,9 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
         with:
-             name: changedFiles
-             path: ${{ env.filePath }}
-             retention-days: 1
+          name: changedFiles
+          path: ${{ env.filePath }}
+          retention-days: 1
 
   RunPylinter:
     runs-on: ubuntu-latest
@@ -69,60 +70,38 @@ jobs:
 
   BuildDocs:
     runs-on: ubuntu-latest
+    needs: initDependencies
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
       
       - name: Set up Python
         uses: actions/setup-python@v3
         with:
           python-version: '3.9'
  
-      - name: Install dependencies
+      - name: Install Sphinx and Dependencies
         run: |
           python -m pip install --upgrade pip
           pip install sphinx sphinx-rtd-theme sphinx-autoapi
       
-      - name: Build documentation
+      - name: Build Sphinx documentation
         run: |
           make -C docs clean 
           make -C docs html
 
       - name: Move HTML Files
         run: |
-          mkdir -p docs_html
-          mv docs/build/html/* docs_html/
+          mkdir -p sphinx_html  # Ensure we're using this folder consistently
+          cp -R docs/build/html/* sphinx_html/
           
-      - name: Commit documentation changes
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add -f docs/build/html
-          git commit -m "Update documentation" -a || echo "No changes to commit"
-        
-      - name: Push changes
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: ad-m/github-push-action@master
+      - name: Push HTML files to doc_test_2
+        uses: dmnemec/copy_file_to_another_repo_action@main
+        env:
+          API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}  # Ensure this token has access to doc_test_2
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ github.ref }}
-      
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v2
-        with:
-          path: docs/build/html
-
-  DeployPages:
-    needs: BuildDocs
-    permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v2
+          source_file: 'sphinx_html/*'
+          destination_repo: 'AaravAgarwal/doc_test_2'  # Replace with your repo
+          destination_folder: 'docs_html'  # The folder in doc_test_2 where HTML will be stored
+          user_email: 'aarav3@illinois.edu'
+          user_name: 'AaravAgarwal'
+          commit_message: 'Update Sphinx documentation HTML'
