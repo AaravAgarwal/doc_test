@@ -101,7 +101,7 @@ jobs:
           git config --global user.name "AaravAgarwal"
           
           git clone https://x-access-token:${GITHUB_TOKEN}@github.com/AaravAgarwal/doc_test_2.git
-          cp -R docs/build/html/* doc_test_2/docs_html/
+          cp -R docs/build/html/* doc_test_2/
           cd doc_test_2
           git add .
           git commit -m "Update Sphinx documentation HTML"
