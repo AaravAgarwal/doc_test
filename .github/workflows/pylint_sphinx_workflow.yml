@@ -94,13 +94,16 @@ jobs:
           ls -R docs/build
 
       - name: Push HTML files to docs repo
-        uses: dmnemec/copy_file_to_another_repo_action@main
         env:
-          API_TOKEN_GITHUB: ${{ secrets.DOCPUSHING }}  # Ensure this token has access to doc_test_2
-        with:
-          source_file: 'docs/build/html/.'  # Use files directly from the generated path
-          destination_repo: 'AaravAgarwal/doc_test_2'  # Replace with your repo
-          destination_folder: 'docs_html'  # The folder in doc_test_2 where HTML will be stored
-          user_email: 'aarav3@illinois.edu'
-          user_name: 'AaravAgarwal'
-          commit_message: 'Update Sphinx documentation HTML'
+          GITHUB_TOKEN: ${{ secrets.DOCPUSHING }}  # Ensure this token has access to doc_test_2
+        run: |
+          git config --global user.email "aarav3@illinois.edu"
+          git config --global user.name "AaravAgarwal"
+          
+          git clone https://x-access-token:${GITHUB_TOKEN}@github.com/AaravAgarwal/doc_test_2.git
+          cp -R docs/build/html/* doc_test_2/docs_html/
+          cd doc_test_2
+          git add .
+          git commit -m "Update Sphinx documentation HTML"
+          git push origin main  
+
