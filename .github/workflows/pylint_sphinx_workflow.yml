@@ -96,7 +96,7 @@ jobs:
       - name: Push HTML files to docs repo
         uses: dmnemec/copy_file_to_another_repo_action@main
         env:
-          API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}  # Ensure this token has access to doc_test_2
+          API_TOKEN_GITHUB: ${{ secrets.DOCPUSHING }}  # Ensure this token has access to doc_test_2
         with:
           source_file: 'docs/build/html/.'  # Use files directly from the generated path
           destination_repo: 'AaravAgarwal/doc_test_2'  # Replace with your repo
