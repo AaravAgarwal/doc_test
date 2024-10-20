@@ -108,5 +108,29 @@ class Calculator:
         6
         """
         return a * b
+
+    def divide(self, a, b):
+        """
+        Subtracts the second number from the first.
+
+        Parameters
+        ----------
+        a : int or float
+            First number.
+        b : int or float
+            Second number to subtract.
+
+        Returns
+        -------
+        int or float
+            The result of subtraction.
+        
+        Examples
+        --------
+        >>> calc = Calculator()
+        >>> calc.subtract(10, 4)
+        6
+        """
+        return a / b
     
 #b
