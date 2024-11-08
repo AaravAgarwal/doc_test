@@ -23,6 +23,10 @@ extensions = [
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
+# Paths for autoapi
+autoapi_type = 'python'
+autoapi_dirs = ['../src']  # Path to the source code directory
+
 # -- Options for HTML output -------------------------------------------------
 html_theme = 'sphinx_rtd_theme'  # You can use other themes like 'alabaster', 'classic', etc.
 html_static_path = ['_static']   # For custom static files (CSS, JS)
