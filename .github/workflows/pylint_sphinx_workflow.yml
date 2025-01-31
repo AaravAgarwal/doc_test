@@ -77,7 +77,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v3
         with:
-          python-version: '3.10'
+          python-version: '3.9'
  
       - name: Install Sphinx and Dependencies
         run: |
@@ -86,11 +86,12 @@ jobs:
       
       - name: Build Sphinx documentation
         run: |
-          sphinx-build -M html ./ ./docs
+          make -C docs clean 
+          make -C docs html
 
       - name: List generated files
         run: |
-          ls -R docs/html
+          ls -R docs/build
 
       - name: Push HTML files to docs repo
         env:
@@ -99,11 +100,19 @@ jobs:
           git config --global user.email "aarav3@illinois.edu"
           git config --global user.name "AaravAgarwal"
           
-          git clone https://x-access-token:${GITHUB_TOKEN}@github.com/AaravAgarwal/doc_test_2.git
-          cp -R docs/html/* strat-telem-documentation/
-          cd strat-telem-documentation
-          git add .
-          git commit -m "Update Apollo Sphinx documentation HTML"
-          git push origin main
+          # Get repository name
+          REPO_NAME=$(basename "$GITHUB_REPOSITORY")
 
-          # sphinx.ext.intersphinx
+          # Clone the documentation destination repo
+          git clone https://x-access-token:${GITHUB_TOKEN}@github.com/AaravAgarwal/doc_test_2.git
+
+          # Ensure the repo-prefixed directory exists
+          mkdir -p doc_test_2/${REPO_NAME}-docs
+
+          # Copy built documentation into repo-specific folder
+          cp -R docs/build/html/* doc_test_2/${REPO_NAME}-docs/
+
+          cd doc_test_2
+          git add .
+          git commit -m "Update Sphinx documentation HTML for ${REPO_NAME}"
+          git push origin main
