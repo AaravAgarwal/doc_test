@@ -47,7 +47,7 @@ jobs:
 
     - name: Deploy documentation
       env:
-        DOCS_REPO: "AaravAgarwal/doc_test_2"
+        DOCS_REPO: "AaravAgarwal/doc_test_3"
         DOCS_TOKEN: ${{ secrets.DOCPUSHING }}
       run: |
         # Configure git
