@@ -103,4 +103,22 @@ class Calculator:
         """
         return a * b
     
+    def divide(self, a, b):
+        """
+        Divides the first number by the second.
+
+        Parameters
+        ----------
+        a : int or float
+            First number.
+        b : int or float
+            Second number to divide by.
+
+        Returns
+        -------
+        int or float
+            The result of division.
+        """
+        return a / b
+    
     
