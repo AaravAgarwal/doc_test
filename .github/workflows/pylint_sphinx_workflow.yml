@@ -1,118 +1,72 @@
-name: Ruff Linter and Sphinx Documentation Generation
+name: Code Quality and Documentation
 
 on: 
   pull_request:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
 
 jobs:
-  initDependencies:
+  lint-and-docs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: ['3.10']
+    
     steps:
-      - uses: actions/checkout@v3
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v3
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Upgrade pip
-        run: |
-          python -m pip install --upgrade pip
-        shell: bash
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-  FindChangedFiles:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Find Changed files
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          URL: ${{github.event.pull_request._links.html.href }}
-        run: |
-          touch modFiles.txt
-          cat <<EOF | grep ".py$" | tee modFiles.txt
-          $(gh pr diff  "$URL" --name-only)
-          EOF
-          echo "filePath=modFiles.txt" >> $GITHUB_ENV
-        shell: bash
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: changedFiles
-          path: ${{ env.filePath }}
-          retention-days: 1
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
 
-  RunRuff:
-    runs-on: ubuntu-latest
-    needs: [FindChangedFiles, initDependencies]
-    steps:
-      - uses: actions/checkout@v3
-      - name: Install Ruff
-        run: |
-          pip install ruff
-        shell: bash
-      - name: Download changedFiles
-        uses: actions/download-artifact@v3
-        with:
-          name: changedFiles
-      - name: Run linter
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          for file in $(cat modFiles.txt); 
-          do 
-          ruff check ${file} --config ./pyproject.toml
-          done;
-        shell: bash
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install ruff sphinx sphinx-rtd-theme sphinx-autoapi
 
-  BuildDocs:
-    runs-on: ubuntu-latest
-    needs: initDependencies
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Set up Python
-        uses: actions/setup-python@v3
-        with:
-          python-version: '3.9'
- 
-      - name: Install Sphinx and Dependencies
-        run: |
-          pip install sphinx sphinx-rtd-theme sphinx-autoapi
-          pip install sphinx-autoapi
-      
-      - name: Build Sphinx documentation
-        run: |
-          make -C docs clean 
-          make -C docs html
+    - name: Get changed files
+      id: changed-files
+      run: |
+        gh pr diff --name-only | grep ".py$" > modFiles.txt
+        echo "files=$(cat modFiles.txt | tr '\n' ' ')" >> $GITHUB_OUTPUT
 
-      - name: List generated files
-        run: |
-          ls -R docs/build
+    - name: Run Ruff linting
+      if: steps.changed-files.outputs.files != ''
+      run: |
+        for file in $(cat modFiles.txt); do
+          ruff check $file --config ./pyproject.toml || exit 1
+        done
 
-      - name: Push HTML files to docs repo
-        env:
-          GITHUB_TOKEN: ${{ secrets.DOCPUSHING }}  # Ensure this token has access to doc_test_2
-        run: |
-          git config --global user.email "aarav3@illinois.edu"
-          git config --global user.name "AaravAgarwal"
-          
-          # Get repository name
-          REPO_NAME=$(basename "$GITHUB_REPOSITORY")
+    - name: Build documentation
+      if: steps.changed-files.outputs.files != ''
+      run: |
+        make -C docs clean
+        make -C docs html
 
-          # Clone the documentation destination repo
-          git clone https://x-access-token:${GITHUB_TOKEN}@github.com/AaravAgarwal/doc_test_2.git
+    - name: Deploy documentation
+      env:
+        DOCS_REPO: "AaravAgarwal/doc_test_2"
+        DOCS_TOKEN: ${{ secrets.DOCPUSHING }}
+      run: |
+        # Configure git
+        git config --global user.email "aarav3@illinois.edu"
+        git config --global user.name "GitHub Actions"
 
-          # Ensure the repo-prefixed directory exists
-          mkdir -p doc_test_2/${REPO_NAME}-docs
+        # Clone docs repository
+        git clone "https://x-access-token:${DOCS_TOKEN}@github.com/${DOCS_REPO}.git" external-docs
 
-          # Copy built documentation into repo-specific folder
-          cp -R docs/build/html/* doc_test_2/${REPO_NAME}-docs/
+        # Create repo-specific directory
+        REPO_NAME=$(basename "$GITHUB_REPOSITORY")
+        TARGET_DIR="external-docs/${REPO_NAME}-docs"
+        mkdir -p "$TARGET_DIR"
 
-          cd doc_test_2
-          git add .
-          git commit -m "Update Sphinx documentation HTML for ${REPO_NAME}"
-          git push origin main
+        # Copy generated docs
+        cp -R docs/build/html/* "$TARGET_DIR/"
+
+        # Commit and push
+        cd external-docs
+        git add .
+        git commit -m "Docs update: ${GITHUB_SHA}"
+        git push origin main
