@@ -85,4 +85,22 @@ class Calculator:
         """
         return a - b
     
+    def multiply(self, a, b):
+        """
+        Multiplies two numbers.
+
+        Parameters
+        ----------
+        a : int or float
+            First number.
+        b : int or float
+            Second number to multiply.
+
+        Returns
+        -------
+        int or float
+            The result of multiplication.
+        """
+        return a * b
+    
     
