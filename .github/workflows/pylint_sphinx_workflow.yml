@@ -28,10 +28,12 @@ jobs:
 
     - name: Get changed files
       id: changed-files
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         gh pr diff --name-only | grep ".py$" > modFiles.txt
         echo "files=$(cat modFiles.txt | tr '\n' ' ')" >> $GITHUB_OUTPUT
-
+      
     - name: Run Ruff linting
       if: steps.changed-files.outputs.files != ''
       run: |
