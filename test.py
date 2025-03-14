@@ -121,4 +121,21 @@ class Calculator:
         """
         return a / b
     
+    def power(self, a, b):
+        """
+        Raises the first number to the power of the second.
+
+        Parameters
+        ----------
+        a : int or float
+            Base number.
+        b : int or float
+            Exponent.
+
+        Returns
+        -------
+        int or float
+            The result of exponentiation.
+        """
+        return a ** b
     
