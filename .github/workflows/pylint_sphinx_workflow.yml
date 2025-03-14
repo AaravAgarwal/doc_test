@@ -31,9 +31,13 @@ jobs:
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
+        BASE_BRANCH=${{ github.base_ref }}  # Get the base branch of the PR
+        git fetch origin $BASE_BRANCH  # Ensure the base branch is available
+        git checkout $BASE_BRANCH  # Switch to the base branch
+        git checkout -  # Return to the detached HEAD state
         gh pr diff --name-only | grep ".py$" > modFiles.txt
         echo "files=$(cat modFiles.txt | tr '\n' ' ')" >> $GITHUB_OUTPUT
-      
+
     - name: Run Ruff linting
       if: steps.changed-files.outputs.files != ''
       run: |
