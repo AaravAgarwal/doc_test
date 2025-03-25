@@ -28,15 +28,12 @@ jobs:
 
     - name: Get changed files
       id: changed-files
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         git fetch origin "+refs/pull/${{ github.event.pull_request.number }}/merge:refs/remotes/origin/pr/${{ github.event.pull_request.number }}"
+        git fetch origin main  # ensure origin/main exists for diff
         git checkout refs/remotes/origin/pr/${{ github.event.pull_request.number }}
-        
-        # Ensure GH CLI is authenticated (optional, GH CLI might not be needed here)
-        echo "" > modFiles.txt
-        git diff --name-only origin/main...HEAD | grep ".py$" >> modFiles.txt || true
+
+        git diff --name-only origin/main...HEAD | grep ".py$" > modFiles.txt || true
         echo "files=$(cat modFiles.txt | tr '\n' ' ')" >> $GITHUB_OUTPUT
 
     - name: Run Ruff linting
@@ -55,15 +52,15 @@ jobs:
           sphinx-quickstart docs -q -p "${{ github.repository }}" -a "GitHub Actions" --sep --makefile --ext-autodoc --ext-viewcode --ext-githubpages --no-batchfile
           # Optional: autoapi settings
           echo "
-    extensions += ['autoapi.extension']
-    autoapi_type = 'python'
-    autoapi_dirs = ['.']
-    html_theme = 'sphinx_rtd_theme'
-    " >> docs/source/conf.py
-        fi
-    
-        make -C docs clean
-        make -C docs html
+        extensions += ['autoapi.extension']
+        autoapi_type = 'python'
+        autoapi_dirs = ['.']
+        html_theme = 'sphinx_rtd_theme'
+        " >> docs/source/conf.py
+            fi
+        
+            make -C docs clean
+            make -C docs html
 
     - name: Deploy documentation
       env:
