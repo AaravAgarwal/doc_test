@@ -49,6 +49,19 @@ jobs:
     - name: Build documentation
       if: steps.changed-files.outputs.files != ''
       run: |
+        if [ ! -d "docs" ]; then
+          echo "No docs/ folder found. Initializing with Sphinx..."
+          mkdir docs
+          sphinx-quickstart docs -q -p "${{ github.repository }}" -a "GitHub Actions" --sep --makefile --ext-autodoc --ext-viewcode --ext-githubpages --no-batchfile
+          # Optional: autoapi settings
+          echo "
+    extensions += ['autoapi.extension']
+    autoapi_type = 'python'
+    autoapi_dirs = ['.']
+    html_theme = 'sphinx_rtd_theme'
+    " >> docs/source/conf.py
+        fi
+    
         make -C docs clean
         make -C docs html
 
