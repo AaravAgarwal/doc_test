@@ -33,15 +33,18 @@ jobs:
       run: |
         git fetch origin "+refs/pull/${{ github.event.pull_request.number }}/merge:refs/remotes/origin/pr/${{ github.event.pull_request.number }}"
         git checkout refs/remotes/origin/pr/${{ github.event.pull_request.number }}
-        gh pr diff --name-only | grep ".py$" > modFiles.txt || true  # Avoid failure if no Python files are changed
         
+        # Ensure GH CLI is authenticated (optional, GH CLI might not be needed here)
+        echo "" > modFiles.txt
+        git diff --name-only origin/main...HEAD | grep ".py$" >> modFiles.txt || true
         echo "files=$(cat modFiles.txt | tr '\n' ' ')" >> $GITHUB_OUTPUT
-        - name: Run Ruff linting
-          if: steps.changed-files.outputs.files != ''
-          run: |
-            for file in $(cat modFiles.txt); do
-              ruff check $file --config ./pyproject.toml || exit 1
-            done
+
+    - name: Run Ruff linting
+      if: steps.changed-files.outputs.files != ''
+      run: |
+        for file in $(cat modFiles.txt); do
+          ruff check "$file" --config ./pyproject.toml || exit 1
+        done
 
     - name: Build documentation
       if: steps.changed-files.outputs.files != ''
@@ -54,23 +57,17 @@ jobs:
         DOCS_REPO: "AaravAgarwal/doc_test_3"
         DOCS_TOKEN: ${{ secrets.DOCPUSHING }}
       run: |
-        # Configure git
         git config --global user.email "aarav3@illinois.edu"
         git config --global user.name "GitHub Actions"
 
-        # Clone docs repository
         git clone "https://x-access-token:${DOCS_TOKEN}@github.com/${DOCS_REPO}.git" external-docs
-
-        # Create repo-specific directory
         REPO_NAME=$(basename "$GITHUB_REPOSITORY")
         TARGET_DIR="external-docs/${REPO_NAME}-docs"
         mkdir -p "$TARGET_DIR"
 
-        # Copy generated docs
         cp -R docs/build/html/* "$TARGET_DIR/"
 
-        # Commit and push
         cd external-docs
         git add .
-        git commit -m "Docs update: ${GITHUB_SHA}"
+        git commit -m "Docs update: ${GITHUB_SHA}" || echo "No changes to commit"
         git push origin main
