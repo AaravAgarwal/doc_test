@@ -73,13 +73,11 @@ jobs:
             --no-batchfile
 
           # Append AutoAPI + RTD theme settings to conf.py
-          echo "
-          extensions += ['autoapi.extension']
-          autoapi_type = 'python'
-          html_theme = 'sphinx_rtd_theme'
-          " >> docs/source/conf.py
-                  fi
-        
+          echo "extensions += ['autoapi.extension']" >> docs/source/conf.py
+          echo "autoapi_type = 'python'" >> docs/source/conf.py
+          echo "html_theme = 'sphinx_rtd_theme'" >> docs/source/conf.py
+        fi
+
         # Build the docs
         make -C docs clean
         make -C docs html
