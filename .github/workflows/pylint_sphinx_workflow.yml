@@ -1,5 +1,4 @@
 name: Code Quality and Documentation
-
 on: 
   pull_request:
     branches: [main]
@@ -13,8 +12,10 @@ jobs:
         python-version: ['3.10']
     
     steps:
-    - name: Checkout code
+    - name: Check out code
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
@@ -29,10 +30,10 @@ jobs:
     - name: Get changed files
       id: changed-files
       run: |
-        git fetch origin "+refs/pull/${{ github.event.pull_request.number }}/merge:refs/remotes/origin/pr/${{ github.event.pull_request.number }}"
-        git fetch origin main  # ensure origin/main exists for diff
-        git checkout refs/remotes/origin/pr/${{ github.event.pull_request.number }}
-
+        # Make sure we have origin/main
+        git fetch origin main
+        
+        # List only changed .py files compared to main
         git diff --name-only origin/main...HEAD | grep ".py$" > modFiles.txt || true
         echo "files=$(cat modFiles.txt | tr '\n' ' ')" >> $GITHUB_OUTPUT
 
@@ -46,37 +47,58 @@ jobs:
     - name: Build documentation
       if: steps.changed-files.outputs.files != ''
       run: |
-        if [ ! -d "docs" ]; then
+        # If no docs/ folder, create one using sphinx-quickstart
+        if [ ! -d docs ]; then
           echo "No docs/ folder found. Initializing with Sphinx..."
-          mkdir docs
-          sphinx-quickstart docs -q -p "${{ github.repository }}" -a "GitHub Actions" --sep --makefile --ext-autodoc --ext-viewcode --ext-githubpages --no-batchfile
-          # Optional: autoapi settings
+          sphinx-quickstart docs -q \
+            -p "MyProject" \
+            -a "GitHub Actions" \
+            --sep \
+            --makefile \
+            --ext-autodoc \
+            --ext-viewcode \
+            --ext-githubpages \
+            --no-batchfile
+
+          # Append AutoAPI + RTD theme settings to conf.py
           echo "
-        extensions += ['autoapi.extension']
-        autoapi_type = 'python'
-        autoapi_dirs = ['.']
-        html_theme = 'sphinx_rtd_theme'
-        " >> docs/source/conf.py
-            fi
+          extensions += ['autoapi.extension']
+          autoapi_type = 'python'
+          html_theme = 'sphinx_rtd_theme'
+          " >> docs/source/conf.py
+                  fi
         
-            make -C docs clean
-            make -C docs html
+        # Build the docs
+        make -C docs clean
+        make -C docs html
 
     - name: Deploy documentation
+      if: steps.changed-files.outputs.files != ''
       env:
         DOCS_REPO: "AaravAgarwal/doc_test_3"
         DOCS_TOKEN: ${{ secrets.DOCPUSHING }}
       run: |
+        # If docs/build/html doesn't exist, skip
+        if [ ! -d docs/build/html ]; then
+          echo "Docs not built — skipping deployment."
+          exit 0
+        fi
+
         git config --global user.email "aarav3@illinois.edu"
         git config --global user.name "GitHub Actions"
 
+        # Clone external docs repository
         git clone "https://x-access-token:${DOCS_TOKEN}@github.com/${DOCS_REPO}.git" external-docs
+
+        # Create repo-specific directory inside external-docs
         REPO_NAME=$(basename "$GITHUB_REPOSITORY")
         TARGET_DIR="external-docs/${REPO_NAME}-docs"
         mkdir -p "$TARGET_DIR"
 
+        # Copy generated docs
         cp -R docs/build/html/* "$TARGET_DIR/"
 
+        # Commit and push changes
         cd external-docs
         git add .
         git commit -m "Docs update: ${GITHUB_SHA}" || echo "No changes to commit"
