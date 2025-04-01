@@ -40,16 +40,14 @@ jobs:
     - name: Ensure pyproject.toml exists for Ruff
       if: steps.changed-files.outputs.files != ''
       run: |
-          if [ ! -f pyproject.toml ]; then
-            echo "Creating pyproject.toml with default Ruff config..."
-            cat << EOF > pyproject.toml
-            [tool.ruff]
-            line-length = 88
-            target-version = "py310"
-            select = ["E", "F"]
-            exclude = ["docs", ".venv"]
-            EOF
-                    fi
+        if [ ! -f pyproject.toml ]; then
+          echo "Creating pyproject.toml with default Ruff config..."
+          echo "[tool.ruff]" >> pyproject.toml
+          echo "line-length = 88" >> pyproject.toml
+          echo "target-version = \"py310\"" >> pyproject.toml
+          echo "select = [\"E\", \"F\"]" >> pyproject.toml
+          echo "exclude = [\"docs\", \".venv\"]" >> pyproject.toml
+        fi
 
     - name: Run Ruff linting
       if: steps.changed-files.outputs.files != ''
